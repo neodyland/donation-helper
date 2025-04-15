@@ -4,20 +4,19 @@ import type { Env } from "./env";
 
 export async function sendEmail(
 	recipientEmail: string,
-	env: Env,
 	userId: string,
 ): Promise<void> {
 	const sesClient = new SESClient({
-		region: env.AWS_REGION,
+		region: process.env.AWS_REGION || "",
 		credentials: {
-			accessKeyId: env.AWS_ACCESS_KEY_ID,
-			secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
+			accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+			secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
 		},
 	});
 
 	const redis = new Redis({
-		url: env.UPSTASH_REDIS_REST_URL,
-		token: env.UPSTASH_REDIS_REST_TOKEN,
+		url: process.env.UPSTASH_REDIS_REST_URL || "",
+		token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
 	});
 
 	const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -38,7 +37,7 @@ export async function sendEmail(
 				Data: "Make it a Quote Email Verification",
 			},
 		},
-		Source: env.SENDING_EMAIL,
+		Source: process.env.SENDING_EMAIL || "",
 	};
 
 	try {

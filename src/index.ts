@@ -9,7 +9,7 @@ import {
 	TextInputBuilder,
 } from "@discordjs/builders";
 import { ButtonStyle, TextInputStyle } from "discord-api-types/v10";
-import { Redis } from "@upstash/redis/cloudflare";
+import { Redis } from "@upstash/redis";
 
 import { sendPanel } from "./send-panel";
 import { isDonor } from "./find-donation";
@@ -22,8 +22,8 @@ app.use(verifyKeyMiddleware());
 
 app.post("/interactions", async (c) => {
 	const redis = new Redis({
-		url: c.env.UPSTASH_REDIS_REST_URL,
-		token: c.env.UPSTASH_REDIS_REST_TOKEN,
+		url: process.env.UPSTASH_REDIS_REST_URL || "",
+		token: process.env.UPSTASH_REDIS_REST_TOKEN || "",
 	});
 
 	const interaction = await c.req.json();
@@ -38,7 +38,7 @@ app.post("/interactions", async (c) => {
 
 		if (channelOption) {
 			const channelId = channelOption.value;
-			await sendPanel(channelId, c.env.DISCORD_BOT_TOKEN);
+			await sendPanel(channelId, process.env.DISCORD_BOT_TOKEN || "");
 		}
 
 		return c.json({
@@ -103,10 +103,10 @@ app.post("/interactions", async (c) => {
 		interaction.data.custom_id === "verification-modal"
 	) {
 		const email = interaction.data.components[0].components[0].value;
-		const donor = await isDonor(email, c.env.BMAC_API_KEY);
+		const donor = await isDonor(email, process.env.BMAC_API_KEY　|| "");
 
 		if (donor) {
-			await sendEmail(email, c.env, interaction.member.user.id);
+			await sendEmail(email, interaction.member.user.id);
 			const button = new ButtonBuilder()
 				.setCustomId("enter-code")
 				.setLabel("Enter code")
@@ -149,10 +149,10 @@ app.post("/interactions", async (c) => {
 		if (code === realCode) {
 			await redis.del(interaction.member.user.id);
 			await giveRoleToUser(
-				c.env.DISCORD_BOT_TOKEN,
-				c.env.GUILD_ID,
+				process.env.DISCORD_BOT_TOKEN || "",
+				process.env.GUILD_ID || "",
 				interaction.member.user.id,
-				c.env.ROLE_ID,
+				process.env.ROLE_ID || "",
 			);
 			return c.json({
 				type: InteractionResponseType.UPDATE_MESSAGE,

@@ -14,7 +14,7 @@ export const verifyKeyMiddleware =
 				body,
 				signature,
 				timestamp,
-				c.env.DISCORD_PUBLIC_KEY,
+				process.env.DISCORD_PUBLIC_KEY || "",
 			));
 		if (!isValidRequest) {
 			console.log("Invalid request signature");
