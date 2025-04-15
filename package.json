@@ -3,6 +3,7 @@
 	"scripts": {
 		"dev": "wrangler dev",
 		"deploy": "wrangler deploy --minify",
+		"start": "NODE_ENV=PRODUCTION bun run src/index.ts",
 		"format": "biome format --write ."
 	},
 	"dependencies": {
