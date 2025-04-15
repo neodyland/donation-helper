@@ -106,23 +106,27 @@ app.post("/interactions", async (c) => {
 		const donor = await isDonor(email, process.env.BMAC_API_KEY　|| "");
 
 		if (donor) {
-			await sendEmail(email, interaction.member.user.id);
-			const button = new ButtonBuilder()
-				.setCustomId("enter-code")
-				.setLabel("Enter code")
-				.setStyle(ButtonStyle.Primary); // ButtonStyle.Primary
-			return c.json({
+			const response = c.json({
 				type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
 				data: {
 					content: `A code has been sent to your email. Please push the button below to enter the code when you receive it.`,
 					components: [
 						new ActionRowBuilder<ButtonBuilder>().addComponents(
-							button,
+							new ButtonBuilder()
+								.setCustomId("enter-code")
+								.setLabel("Enter code")
+								.setStyle(ButtonStyle.Primary)
 						),
 					],
 					flags: 64, // EPHEMERAL
 				},
 			});
+
+			(async () => {
+				await sendEmail(email, interaction.member.user.id);
+			})();
+
+			return response;
 		}
 		return c.json({
 			type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
