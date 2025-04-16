@@ -15,6 +15,8 @@ import { sendPanel } from "./send-panel";
 import { isDonor } from "./find-donation";
 import { sendEmail } from "./send-email";
 import { giveRoleToUser } from "./give-role";
+import { calculateMonthlyRevenue } from "./getRevenue";
+import { updateDonatorData } from "./donor-storage";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -48,6 +50,65 @@ app.post("/interactions", async (c) => {
 				flags: 64, // EPHEMERAL
 			},
 		});
+	}
+
+	if (
+		interaction.type === InteractionType.APPLICATION_COMMAND &&
+		interaction.data.name === "mr"
+	) {
+		const revenue = await calculateMonthlyRevenue(
+			process.env.BMAC_API_KEY || "",
+		);
+
+		return c.json({
+			type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+			data: {
+				content: `This month's revenue is **$${revenue}**`,
+				flags: 64, // EPHEMERAL
+			},
+		});
+	}
+
+	if (
+		interaction.type === InteractionType.APPLICATION_COMMAND &&
+		interaction.data.name === "add-donor"
+	) {
+		const id = interaction.data.options[0].value;
+
+		const response = c.json({
+			type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+			data: {
+				content: `Donor with ID ${id} added!`,
+				flags: 64, // EPHEMERAL
+			},
+		});
+
+		(async () => {
+			await updateDonatorData(id, "add");
+		})();
+
+		return response;
+	}
+
+	if (
+		interaction.type === InteractionType.APPLICATION_COMMAND &&
+		interaction.data.name === "remove-donor"
+	) {
+		const id = interaction.data.options[0].value;
+
+		const response = c.json({
+			type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+			data: {
+				content: `Donor with ID ${id} removed!`,
+				flags: 64, // EPHEMERAL
+			},
+		});
+
+		(async () => {
+			await updateDonatorData(id, "remove");
+		})();
+
+		return response;
 	}
 
 	if (
@@ -103,7 +164,7 @@ app.post("/interactions", async (c) => {
 		interaction.data.custom_id === "verification-modal"
 	) {
 		const email = interaction.data.components[0].components[0].value;
-		const donor = await isDonor(email, process.env.BMAC_API_KEY　|| "");
+		const donor = await isDonor(email, process.env.BMAC_API_KEY || "");
 
 		if (donor) {
 			const response = c.json({
@@ -115,7 +176,7 @@ app.post("/interactions", async (c) => {
 							new ButtonBuilder()
 								.setCustomId("enter-code")
 								.setLabel("Enter code")
-								.setStyle(ButtonStyle.Primary)
+								.setStyle(ButtonStyle.Primary),
 						),
 					],
 					flags: 64, // EPHEMERAL
@@ -152,13 +213,8 @@ app.post("/interactions", async (c) => {
 
 		if (code === realCode) {
 			await redis.del(interaction.member.user.id);
-			await giveRoleToUser(
-				process.env.DISCORD_BOT_TOKEN || "",
-				process.env.GUILD_ID || "",
-				interaction.member.user.id,
-				process.env.ROLE_ID || "",
-			);
-			return c.json({
+
+			const response = c.json({
 				type: InteractionResponseType.UPDATE_MESSAGE,
 				data: {
 					content: `Verification successful! You can now access the donor perks.`,
@@ -166,6 +222,18 @@ app.post("/interactions", async (c) => {
 					flags: 64, // EPHEMERAL
 				},
 			});
+
+			(async () => {
+				await giveRoleToUser(
+					process.env.DISCORD_BOT_TOKEN || "",
+					process.env.GUILD_ID || "",
+					interaction.member.user.id,
+					process.env.ROLE_ID || "",
+				);
+				await updateDonatorData(interaction.member.user.id, "add");
+			})();
+
+			return response;
 		} else {
 			return c.json({
 				type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,

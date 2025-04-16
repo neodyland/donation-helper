@@ -14,6 +14,35 @@ const commands = [
 				.setDescription("The channel to send the panel to")
 				.setRequired(true),
 		),
+
+	new SlashCommandBuilder()
+		.setName("mr")
+		.setDescription("Check this month's revenue")
+		.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+
+	new SlashCommandBuilder()
+		.setName("add-donor")
+		.setDescription(
+			"Manually add a donor to the database (does not give role)",
+		)
+		.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+		.addStringOption((option) =>
+			option
+				.setName("id")
+				.setDescription("The ID to add")
+				.setRequired(true),
+		),
+
+	new SlashCommandBuilder()
+		.setName("remove-donor")
+		.setDescription("Remove a donor to the database")
+		.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+		.addStringOption((option) =>
+			option
+				.setName("id")
+				.setDescription("The ID to remove")
+				.setRequired(true),
+		),
 ].map((command) => command.toJSON());
 
 export async function registerCommands(token: string, clientId: string) {
@@ -38,4 +67,7 @@ export async function registerCommands(token: string, clientId: string) {
 	}
 }
 
-registerCommands(process.env.BOT_TOKEN || "", process.env.CLIENT_ID || "");
+registerCommands(
+	process.env.DISCORD_BOT_TOKEN || "",
+	process.env.DISCORD_CLIENT_ID || "",
+);
