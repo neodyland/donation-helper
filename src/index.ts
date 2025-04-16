@@ -209,8 +209,6 @@ app.post("/interactions", async (c) => {
 			(await redis.get(interaction.member.user.id)) || "0",
 		);
 
-		console.log(interaction.member.user.id, code, realCode);
-
 		if (code === realCode) {
 			await redis.del(interaction.member.user.id);
 
