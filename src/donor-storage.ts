@@ -5,6 +5,8 @@ import {
 } from "@aws-sdk/client-s3";
 import { Readable } from "stream";
 
+import { getDonorCount } from "./find-donation";
+
 const BUCKET_NAME = process.env.S3_BUCKET;
 const FILE_KEY = "donator.json";
 
@@ -53,16 +55,18 @@ export async function updateDonatorData(
 ): Promise<void> {
 	const donatorData = await fetchDonatorData();
 
+	const totalDonorCount = await getDonorCount();
+
 	if (action === "add") {
 		if (!donatorData.donator_user_ids.includes(userId)) {
 			donatorData.donator_user_ids.push(userId);
-			donatorData.donator_count = donatorData.donator_user_ids.length;
+			donatorData.donator_count = totalDonorCount;
 		}
 	} else if (action === "remove") {
 		const index = donatorData.donator_user_ids.indexOf(userId);
 		if (index !== -1) {
 			donatorData.donator_user_ids.splice(index, 1);
-			donatorData.donator_count = donatorData.donator_user_ids.length;
+			donatorData.donator_count = totalDonorCount;
 		}
 	} else {
 		throw new Error(`Invalid action: ${action}`);

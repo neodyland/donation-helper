@@ -1,5 +1,23 @@
 const BMC_API_URL = "https://developers.buymeacoffee.com/api/v1/supporters";
 
+export async function getDonorCount(): Promise<number> {
+	try {
+		const response = await fetch(BMC_API_URL, {
+			method: "GET",
+			headers: {
+				Authorization: `Bearer ${process.env.BMAC_API_KEY || ""}`,
+				"Content-Type": "application/json",
+			},
+		});
+		const data = (await response.json()) as any;
+
+		return data.total;
+	} catch (error) {
+		console.error("Error checking total count:", error);
+		throw error;
+	}
+}
+
 export async function isDonor(email: string, apiKey: string): Promise<boolean> {
 	async function fetchPage(url: string): Promise<boolean> {
 		try {
@@ -28,7 +46,7 @@ export async function isDonor(email: string, apiKey: string): Promise<boolean> {
 				return await fetchPage(data.next_page_url);
 			}
 
-			return false; // Email not found in any page
+			return false;
 		} catch (error) {
 			console.error("Error checking donor status:", error);
 			throw error;
