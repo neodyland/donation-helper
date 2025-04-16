@@ -16,7 +16,7 @@ import { isDonor } from "./find-donation";
 import { sendEmail } from "./send-email";
 import { giveRoleToUser } from "./give-role";
 import { calculateMonthlyRevenue } from "./getRevenue";
-import { updateDonatorData } from "./donor-storage";
+import { updateDonatorData, updateExternalDonors } from "./donor-storage";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -106,6 +106,27 @@ app.post("/interactions", async (c) => {
 
 		(async () => {
 			await updateDonatorData(id, "remove");
+		})();
+
+		return response;
+	}
+
+	if (
+		interaction.type === InteractionType.APPLICATION_COMMAND &&
+		interaction.data.name === "set-external-donors"
+	) {
+		const count = interaction.data.options[0].value;
+
+		const response = c.json({
+			type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
+			data: {
+				content: `Set the number of external donors to ${count}!`,
+				flags: 64, // EPHEMERAL
+			},
+		});
+
+		(async () => {
+			await updateExternalDonors(count);
 		})();
 
 		return response;

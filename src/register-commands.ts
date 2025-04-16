@@ -43,6 +43,17 @@ const commands = [
 				.setDescription("The ID to remove")
 				.setRequired(true),
 		),
+
+	new SlashCommandBuilder()
+		.setName("set-external-donors")
+		.setDescription("Set the number of external (Non-BMaC) donors")
+		.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+		.addNumberOption((option) =>
+			option
+				.setName("count")
+				.setDescription("The number of external donors")
+				.setRequired(true),
+		),
 ].map((command) => command.toJSON());
 
 export async function registerCommands(token: string, clientId: string) {

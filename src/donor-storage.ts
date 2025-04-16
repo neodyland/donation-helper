@@ -32,6 +32,8 @@ async function streamToString(stream: Readable): Promise<string> {
 
 async function fetchDonatorData(): Promise<{
 	donator_count: number;
+	bmc_donors: number;
+	external_donors: number;
 	donator_user_ids: string[];
 }> {
 	const command = new GetObjectCommand({
@@ -44,11 +46,25 @@ async function fetchDonatorData(): Promise<{
 	return JSON.parse(data);
 }
 
-/**
- * Updates the donator data by adding or removing a specific ID.
- * @param userId - The user ID to add or remove.
- * @param action - Either "add" or "remove".
- */
+export async function updateExternalDonors(count: number): Promise<void> {
+	const donatorData = await fetchDonatorData();
+
+	donatorData.external_donors = count;
+	donatorData.donator_count =
+		donatorData.external_donors + donatorData.bmc_donors;
+
+	const updatedData = JSON.stringify(donatorData, null, 2);
+
+	const putCommand = new PutObjectCommand({
+		Bucket: BUCKET_NAME,
+		Key: FILE_KEY,
+		Body: updatedData,
+		ContentType: "application/json",
+	});
+
+	await s3Client.send(putCommand);
+}
+
 export async function updateDonatorData(
 	userId: string,
 	action: "add" | "remove",
@@ -60,13 +76,17 @@ export async function updateDonatorData(
 	if (action === "add") {
 		if (!donatorData.donator_user_ids.includes(userId)) {
 			donatorData.donator_user_ids.push(userId);
-			donatorData.donator_count = totalDonorCount;
+			donatorData.donator_count =
+				donatorData.external_donors + totalDonorCount;
+			donatorData.bmc_donors = totalDonorCount;
 		}
 	} else if (action === "remove") {
 		const index = donatorData.donator_user_ids.indexOf(userId);
 		if (index !== -1) {
 			donatorData.donator_user_ids.splice(index, 1);
-			donatorData.donator_count = totalDonorCount;
+			donatorData.donator_count =
+				donatorData.external_donors + totalDonorCount;
+			donatorData.bmc_donors = totalDonorCount;
 		}
 	} else {
 		throw new Error(`Invalid action: ${action}`);
