@@ -10,7 +10,7 @@ export async function logDonation(id: string) {
 		embeds: [
 			new EmbedBuilder()
 				.setTitle("Perks claimed!")
-				.setDescription(`User ID: ${id}`)
+				.setDescription(`User: <@${id}>`)
 				.setColor(0x00ff00),
 		],
 	});
