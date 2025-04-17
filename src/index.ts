@@ -18,6 +18,9 @@ import { giveRoleToUser } from "./give-role";
 import { calculateMonthlyRevenue } from "./getRevenue";
 import { updateDonatorData, updateExternalDonors } from "./donor-storage";
 import { logDonation } from "./logging";
+import { startRevenueUpdate } from "./update-revenue";
+
+startRevenueUpdate();
 
 const app = new Hono<{ Bindings: Env }>();
 

@@ -35,6 +35,7 @@ async function fetchDonatorData(): Promise<{
 	bmc_donors: number;
 	external_donors: number;
 	donator_user_ids: string[];
+	monthly_revenue: number;
 }> {
 	const command = new GetObjectCommand({
 		Bucket: BUCKET_NAME,
@@ -91,6 +92,23 @@ export async function updateDonatorData(
 	} else {
 		throw new Error(`Invalid action: ${action}`);
 	}
+
+	const updatedData = JSON.stringify(donatorData, null, 2);
+
+	const putCommand = new PutObjectCommand({
+		Bucket: BUCKET_NAME,
+		Key: FILE_KEY,
+		Body: updatedData,
+		ContentType: "application/json",
+	});
+
+	await s3Client.send(putCommand);
+}
+
+export async function updateRevenueData(revenue: number): Promise<void> {
+	const donatorData = await fetchDonatorData();
+
+	donatorData.monthly_revenue = revenue;
 
 	const updatedData = JSON.stringify(donatorData, null, 2);
 
