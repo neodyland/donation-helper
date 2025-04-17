@@ -17,6 +17,7 @@ import { sendEmail } from "./send-email";
 import { giveRoleToUser } from "./give-role";
 import { calculateMonthlyRevenue } from "./getRevenue";
 import { updateDonatorData, updateExternalDonors } from "./donor-storage";
+import { logDonation } from "./logging";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -249,6 +250,7 @@ app.post("/interactions", async (c) => {
 					interaction.member.user.id,
 					process.env.ROLE_ID || "",
 				);
+				await logDonation(interaction.member.user.id);
 				await updateDonatorData(interaction.member.user.id, "add");
 			})();
 
