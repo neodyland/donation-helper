@@ -54,6 +54,17 @@ const commands = [
 				.setDescription("The number of external donors")
 				.setRequired(true),
 		),
+
+	new SlashCommandBuilder()
+		.setName("set-external-revenue")
+		.setDescription("Set the revenue of external (Non-BMaC) donors")
+		.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+		.addNumberOption((option) =>
+			option
+				.setName("count")
+				.setDescription("The revenue of external donors")
+				.setRequired(true),
+		),
 ].map((command) => command.toJSON());
 
 export async function registerCommands(token: string, clientId: string) {

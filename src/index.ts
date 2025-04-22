@@ -161,10 +161,11 @@ app.post("/interactions", async (c) => {
 
 	if (
 		interaction.type === InteractionType.MESSAGE_COMPONENT &&
-		interaction.data.custom_id === "enter-code"
+		interaction.data.custom_id.startsWith("enter-code-")
 	) {
+		const email = interaction.data.custom_id.split("-")[2];
 		const modal = new ModalBuilder()
-			.setCustomId("code-modal")
+			.setCustomId(`code-modal-${email}`)
 			.setTitle("Enter Code")
 			.addComponents(
 				new ActionRowBuilder<TextInputBuilder>().addComponents(
@@ -199,7 +200,7 @@ app.post("/interactions", async (c) => {
 					components: [
 						new ActionRowBuilder<ButtonBuilder>().addComponents(
 							new ButtonBuilder()
-								.setCustomId("enter-code")
+								.setCustomId(`enter-code-${email}`)
 								.setLabel("Enter code")
 								.setStyle(ButtonStyle.Primary),
 						),
@@ -225,7 +226,7 @@ app.post("/interactions", async (c) => {
 
 	if (
 		interaction.type === InteractionType.MODAL_SUBMIT &&
-		interaction.data.custom_id === "code-modal"
+		interaction.data.custom_id.startsWith("code-modal-")
 	) {
 		const code = parseInt(
 			interaction.data.components[0].components[0].value,
@@ -233,6 +234,7 @@ app.post("/interactions", async (c) => {
 		const realCode = parseInt(
 			(await redis.get(interaction.member.user.id)) || "0",
 		);
+		const email = interaction.data.custom_id.split("-")[2];
 
 		if (code === realCode) {
 			await redis.del(interaction.member.user.id);
@@ -253,7 +255,7 @@ app.post("/interactions", async (c) => {
 					interaction.member.user.id,
 					process.env.ROLE_ID || "",
 				);
-				await logDonation(interaction.member.user.id);
+				await logDonation(interaction.member.user.id, email);
 				await updateDonatorData(interaction.member.user.id, "add");
 			})();
 
